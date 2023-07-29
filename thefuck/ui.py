@@ -93,3 +93,4 @@ def select_command(corrected_commands):
         elif action == const.ACTION_NEXT:
             selector.next()
             logs.confirm_text(selector.value)
+

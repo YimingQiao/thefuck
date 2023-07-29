@@ -12,10 +12,10 @@ from ..shells import shell  # noqa: E402
 from .alias import print_alias  # noqa: E402
 from .fix_command import fix_command  # noqa: E402
 
-
 def main():
     parser = Parser()
     known_args = parser.parse(sys.argv)
+
 
     if known_args.help:
         parser.print_help()
@@ -28,7 +28,7 @@ def main():
     elif known_args.alias:
         print_alias(known_args)
     elif known_args.command or 'TF_HISTORY' in os.environ:
-        fix_command(known_args)
+        fix_command(known_args, known_args.ChatGPT4)
     elif known_args.shell_logger:
         try:
             from .shell_logger import shell_logger  # noqa: E402
