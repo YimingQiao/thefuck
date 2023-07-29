@@ -12,7 +12,7 @@ from ..ui import select_command
 from ..utils import get_alias, get_all_executables
 from ..types import CorrectedCommand
 
-openai.api_key = "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"
+openai.api_key = "xxx"
 
 
 def _get_raw_command(known_args):
