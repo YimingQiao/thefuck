@@ -12,7 +12,7 @@ from ..ui import select_command
 from ..utils import get_alias, get_all_executables
 from ..types import CorrectedCommand
 
-openai.api_key = "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"
+openai.api_key = "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"
 
 
 def _get_raw_command(known_args):
@@ -34,34 +34,65 @@ def _get_raw_command(known_args):
 def qeury_gpt(command):
     '''This function asks gpt to fix the input command.'''
 
-    # Prepare the prompts
-    sys_prompt = (
-        "You are an assistant that help fix an error terminal script. "
-        "Please give the correct command in the first row with quotation mark in your response."
-    )
-    usr_prompt = f"My input is {command.script}, but the terminal outputs {command.output}. "
+    # any .py file in this command?
+    file_pattern = "\S+\.py"
+    file_matches = re.findall(file_pattern, command.script)
+    if len(file_matches) == 0 or not os.path.exists(file_matches[0]):
+        # Command Fix Task
+        sys_prompt = (
+            "You are an assistant that help fix an error terminal script. "
+            "Please give the correct command in the first row with quotation mark in your response."
+        )
+        usr_prompt = f"My input is {command.script}, but the terminal outputs {command.output}. "
 
-    # Send Query
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": usr_prompt}
-        ],
-        temperature=0.7,
-        max_tokens=256
-    )
+        # Send Query
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": usr_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=256
+        )
 
-    # Print Answer
-    ans = response['choices'][0]['message']['content']
-    print(ans, file=sys.stderr)
+        # Print Answer
+        ans = response['choices'][0]['message']['content']
+        print(ans, file=sys.stderr)
 
-    # Get Script
-    pattern = "\"(.*?)\""
-    matches = re.findall(pattern, ans)
-    script = matches[0]
+        # Get Script
+        pattern = "\"(.*?)\""
+        matches = re.findall(pattern, ans)
+        script = matches[0]
 
-    return script
+        return script
+    else:
+        # Code Generation Task
+        py_files = file_matches[0]
+        with open(py_files, 'r') as file:
+            code = file.read()
+
+        sys_prompt = (
+            "You are an assistant that help generates python code."
+            "Please give the correct code according to the output. "
+        )
+        usr_prompt = f"My code is {code}, and my script is {command.script}, but the terminal outputs {command.output}."
+        
+        # Send Query
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": usr_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2048
+        )
+
+        # Print Answer
+        ans = response['choices'][0]['message']['content']
+        print(ans, file=sys.stderr)
+        sys.exit(0)
 
 
 def fix_command(known_args, gpt=False):
