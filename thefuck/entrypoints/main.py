@@ -28,7 +28,7 @@ def main():
     elif known_args.alias:
         print_alias(known_args)
     elif known_args.command or 'TF_HISTORY' in os.environ:
-        fix_command(known_args, known_args.ChatGPT4)
+        fix_command(known_args, known_args.ChatGPT4, known_args.wizard)
     elif known_args.shell_logger:
         try:
             from .shell_logger import shell_logger  # noqa: E402

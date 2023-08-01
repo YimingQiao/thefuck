@@ -41,6 +41,10 @@ class Parser(object):
             '-g', '--ChatGPT4',
             action='store_true',
             help='We then use gpt4, instead of rules, to fix commands')
+        self._parser.add_argument(
+            '-w', '--wizard',
+            action='store_true',
+            help='We then use wizard, instead of rules, to fix commands')
         self._add_conflicting_arguments()
         self._parser.add_argument(
             '-d', '--debug',
