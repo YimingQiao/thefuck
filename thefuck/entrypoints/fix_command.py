@@ -11,6 +11,7 @@ from ..exceptions import EmptyCommand
 from ..ui import select_command
 from ..utils import get_alias, get_all_executables
 from ..types import CorrectedCommand
+import socket
 
 openai.api_key = "xxx"
 
@@ -29,6 +30,37 @@ def _get_raw_command(known_args):
             if diff < const.DIFF_WITH_ALIAS or command in executables:
                 return [command]
     return []
+
+
+def qeury_wizard(command):
+    '''This function asks wizardcoder to fix the python script.'''
+
+    # any .py file in this command?
+    file_pattern = "\S+\.py"
+    file_matches = re.findall(file_pattern, command.script)
+    if len(file_matches) == 0 or not os.path.exists(file_matches[0]):
+        pass
+    else:
+        # Code Generation Task
+        py_files = file_matches[0]
+        with open(py_files, 'r') as file:
+            code = file.read()
+
+        usr_prompt = f"My code is {code}, and my command is {command.script}, but the terminal outputs {command.output}. Please correct my code."
+        
+        s = socket.socket() 
+        host = "127.0.0.1"
+        port = 11451
+        
+        s.connect((host, port))
+        s.send(usr_prompt.encode('utf-8'))
+        ans = s.recv(1024)
+        s.close()
+
+        # Send Query
+        print(ans, file=sys.stderr)
+        sys.exit(0)
+
 
 
 def qeury_gpt(command):
@@ -95,7 +127,7 @@ def qeury_gpt(command):
         sys.exit(0)
 
 
-def fix_command(known_args, gpt=False):
+def fix_command(known_args, gpt=False, wizard=False):
     """Fixes previous command. Used when `thefuck` called without arguments. If gpt = True, we use gpt4 to fix comamnd."""
     settings.init(known_args)
     with logs.debug_time('Total'):
@@ -111,6 +143,9 @@ def fix_command(known_args, gpt=False):
         # Use gpt or not?
         if gpt:
             script = qeury_gpt(command)
+            corrected_commands = iter([CorrectedCommand(script, side_effect=None, priority=1e6)])
+        elif wizard:
+            script = qeury_wizard(command)
             corrected_commands = iter([CorrectedCommand(script, side_effect=None, priority=1e6)])
         else:
             corrected_commands = get_corrected_commands(command)

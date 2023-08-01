@@ -1,4 +1,7 @@
 #!/bin/sh
 
-echo "Installation script is deprecated!"
-echo "For installation instruction please visit https://github.com/nvbn/thefuck"
+cd ~/thefuck
+rm -rf dist/*
+python setup.py sdist bdist_wheel
+pip install dist/thefuck-3.32-py2.py3-none-any.whl --force-reinstall
+
